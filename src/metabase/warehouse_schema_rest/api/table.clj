@@ -3,6 +3,7 @@
   (:require
    [clojure.java.io :as io]
    [malli.core :as mc]
+   [metabase.api-scope.data-app :as api-scope]
    [metabase.api.common :as api]
    [metabase.api.macros :as api.macros]
    [metabase.collections.core :as collections]
@@ -122,7 +123,7 @@
                       :metabase/validate-defendpoint-has-response-schema]}
 (api.macros/defendpoint :get "/:id"
   "Get `Table` with ID."
-  {:scope "data-app"}
+  {:scope api-scope/data-app}
   [{:keys [id]} :- [:map
                     [:id ms/PositiveInt]]
    {:keys [include_editable_data_model]}
@@ -308,7 +309,7 @@
    data model, while `false` checks that they have data access perms for the table. Defaults to `false`.
 
    These options are provided for use in the Admin Edit Metadata page."
-  {:scope "data-app"}
+  {:scope api-scope/data-app}
   [{:keys [id]} :- [:map
                     [:id ms/PositiveInt]]
    {:keys [include_sensitive_fields include_hidden_fields include_editable_data_model]}
@@ -353,7 +354,7 @@
 #_{:clj-kondo/ignore [:metabase/validate-defendpoint-has-response-schema]}
 (api.macros/defendpoint :get "/:id/fks"
   "Get all foreign keys whose destination is a `Field` that belongs to this `Table`."
-  {:scope "data-app"}
+  {:scope api-scope/data-app}
   [{:keys [id]} :- [:map
                     [:id ms/PositiveInt]]]
   (api/read-check :model/Table id)
