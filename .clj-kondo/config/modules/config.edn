@@ -1396,6 +1396,7 @@
               metabase.metabot.metadata-perms
               metabase.metabot.schema
               metabase.metabot.self
+              metabase.metabot.self.catalog
               metabase.metabot.settings
               metabase.metabot.tools.entity-details}
    :friends #{agent-api
