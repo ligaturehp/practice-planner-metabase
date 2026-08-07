@@ -3,6 +3,7 @@
   (:require
    [clojure.string :as str]
    [metabase.config.core :as config]
+   [metabase.llm.health :as llm.health]
    [metabase.premium-features.core :as premium-features]
    [metabase.request.current :as request.current]
    [metabase.settings.core :as setting :refer [defsetting]]
@@ -627,6 +628,9 @@
   :visibility :internal
   :export?    false
   :audit      :no-value
+  ;; Rewriting the list invalidates what the old one did: credentials may have been rotated, a connection replaced,
+  ;; the order changed. Everything [[metabase.llm.health]] holds is about connections as they were configured, so it
+  ;; is dropped rather than held against whatever is configured now.
   :setter     (fn [new-value]
                 ;; Startup configuration and backend callers have no current request. During one, only the dedicated
                 ;; provider API may write the backing setting; the generic settings API cannot perform its validation
@@ -638,6 +642,7 @@
                                    :api-error   true
                                    :error-code  :llm-providers-direct-write-forbidden})))
                 ((requiring-resolve 'metabase.llm.provider/validate-changed-connections!) new-value)
+                (llm.health/forget-all!)
                 (setting/set-value-of-type! :json :llm-providers new-value))
   :doc        "Connections are normally managed from the admin AI settings page. Setting this environment variable puts the whole list under environment control and makes it read-only in the UI.
 
@@ -649,6 +654,14 @@ Configuring a provider through the single-provider variables (`MB_LLM_ANTHROPIC_
   [providers]
   (binding [*allow-llm-provider-write* true]
     (llm-providers! providers)))
+
+(defsetting llm-provider-fallback-enabled?
+  (deferred-tru "Whether Metabot switches to the next connected provider when the one it is set to use is failing.")
+  :type       :boolean
+  :default    true
+  :visibility :settings-manager
+  :export?    true
+  :doc        "When a provider rejects Metabase's requests, Metabase records the failure and — with this on — runs on the default model of the next connection in `llm-providers` instead, until the original one works again. Turn it off to have requests fail on the selected provider rather than move to another one.")
 
 ;;; --------------------------------------------------- Proxy ---------------------------------------------------
 
