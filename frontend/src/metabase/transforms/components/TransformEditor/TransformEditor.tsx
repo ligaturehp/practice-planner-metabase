@@ -96,9 +96,7 @@ export function TransformEditor({
         showEditButton && (
           <EditDefinitionButton
             bg="transparent"
-            fz="sm"
-            h="1.5rem"
-            px="sm"
+            size="compact-md"
             transformId={transform.id}
           />
         )
