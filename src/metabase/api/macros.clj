@@ -27,6 +27,7 @@
    [malli.util]
    [medley.core :as m]
    [metabase.api.common.internal]
+   [metabase.api.docs.regenerate :as docs.regenerate]
    [metabase.api.macros.defendpoint.open-api]
    [metabase.api.macros.scope]
    [metabase.api.open-api :as open-api]
@@ -816,8 +817,7 @@
     (when (config/config-bool :mb-enable-openapi-auto-regen)
       (try
         (events/publish-event! :event/api-handler-update
-                               {:api.docs/request-rebuild
-                                (requiring-resolve 'metabase.api.docs/request-spec-regeneration!)})
+                               {:api.docs/request-rebuild #'docs.regenerate/request-spec-regeneration!})
         (catch Throwable e
           (log/debugf "Failed to publish api-handler-update event: %s" (ex-message e)))))))
 
