@@ -4,6 +4,7 @@
    [metabase.app-db.core :as mdb]
    [metabase.config.core :as config]
    [metabase.premium-features.defenterprise :refer [defenterprise]]
+   [metabase.premium-features.token-check :as token-check]
    [metabase.settings.core :as setting :refer [defsetting]]
    [metabase.util.i18n :refer [deferred-tru]]))
 
@@ -28,7 +29,7 @@
   :default    0
   :export?    false
   :getter     (fn []
-                ((requiring-resolve 'metabase.premium-features.token-check/-active-users-count))))
+                (token-check/-active-users-count)))
 
 (defsetting token-status
   (deferred-tru "Cached token status for premium features. This is to avoid an API request on the the first page load.")
@@ -38,7 +39,7 @@
   :audit      :never
   :setter     :none
   :getter     (fn []
-                ((requiring-resolve 'metabase.premium-features.token-check/-token-status))))
+                (token-check/-token-status)))
 
 (defsetting locked-meters
   (deferred-tru "Locally-mirrored is-locked state per meter, refreshed on each successful token-check.")
@@ -56,7 +57,7 @@
   :audit :never
   :sensitive? true
   :setter (fn [new-value]
-            ((requiring-resolve 'metabase.premium-features.token-check/-set-premium-embedding-token!) new-value)))
+            (token-check/-set-premium-embedding-token! new-value)))
 
 (defsetting airgap-enabled
   "Returns true if the current instance is airgapped."
@@ -66,10 +67,7 @@
   :audit      :never
   :export?    false
   :getter     (fn []
-                ((requiring-resolve 'metabase.premium-features.token-check/-airgap-enabled))))
-
-(defn- has-feature? [feature]
-  ((requiring-resolve 'metabase.premium-features.token-check/has-feature?) feature))
+                (token-check/-airgap-enabled)))
 
 (defsetting is-hosted?
   "Is the Metabase instance running in the cloud?"
@@ -79,7 +77,7 @@
   :audit      :never
   :getter     (fn [] (boolean
                       (and
-                       (has-feature? :hosting)
+                       (token-check/has-feature? :hosting)
                        (not (airgap-enabled)))))
   :doc        false)
 
@@ -90,7 +88,7 @@
 (defn- default-premium-feature-getter [feature]
   (fn []
     (and config/ee-available?
-         (has-feature? feature))))
+         (token-check/has-feature? feature))))
 
 (defmacro define-premium-feature
   "Convenience for generating a [[metabase.settings.models.setting/defsetting]] form for a premium token feature. (The Settings
@@ -115,7 +113,7 @@
   :export? true
   ;; This specific feature DOES NOT require the EE code to be present in order for it to return truthy, unlike
   ;; everything else.
-  :getter #(has-feature? :embedding))
+  :getter #(token-check/has-feature? :embedding))
 
 (define-premium-feature enable-embedding-sdk-origins?
   "Should we allow users embed the SDK in sites other than localhost?"
@@ -335,10 +333,10 @@
    a self-hosted instance, and the `security-center-disabled` setting to be unset."
   :admin-security-center
   :getter (fn []
-            (and (has-feature? :admin-security-center)
+            (and (token-check/has-feature? :admin-security-center)
                  (not (is-hosted?))
                  (not (security-center-disabled))
-                 (not ((requiring-resolve 'metabase.premium-features.token-check/is-trial?)))
+                 (not (token-check/is-trial?))
                  (or config/is-test? config/is-e2e?
                      (not= (mdb/db-type) :h2)))))
 
@@ -394,7 +392,7 @@
    :content_translation            (enable-content-translation?)
    :content_verification           (enable-content-verification?)
    :custom-viz                     (enable-custom-viz?)
-   :custom-viz-available           (has-feature? :custom-viz)
+   :custom-viz-available           (token-check/has-feature? :custom-viz)
    :data-apps                      (enable-data-apps?)
    :data-complexity-score          (enable-data-complexity-score?)
    :dashboard_subscription_filters (enable-dashboard-subscription-filters?)
