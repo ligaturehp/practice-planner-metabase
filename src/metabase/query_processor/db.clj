@@ -5,6 +5,7 @@
    [java-time.api :as t]
    [metabase.app-db.core :as app-db]
    [metabase.lib.schema.id :as lib.schema.id]
+   [metabase.queries.card-schema :as card-schema]
    [metabase.queries.schema :as queries.schema]
    [metabase.util.malli :as mu]
    ^{:clj-kondo/ignore [:discouraged-namespace]}
@@ -20,9 +21,9 @@
   (t2/select-one :model/Table :id table-id))
 
 (mu/defn source-card-metadata
-  "The entity id, result metadata, and type of the Card with `card-id`, or nil."
+  "The query-relevant columns of the Card with `card-id`, plus its entity id, or nil."
   [card-id :- ::lib.schema.id/card]
-  (t2/select-one [:model/Card :entity_id :result_metadata :type :card_schema] :id card-id))
+  (card-schema/card-by-id card-id :include [:entity_id]))
 
 (mu/defn dashcard-series-exists?
   "Whether the Card with `card-id` is a series of the DashboardCard with `dashcard-id`."

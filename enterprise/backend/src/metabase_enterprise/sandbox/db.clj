@@ -2,6 +2,7 @@
   "Application database queries for the sandbox module. Every function here is a direct Toucan 2 call with no
   additional logic, so the rest of the module only touches `toucan2.core` for model definitions."
   (:require
+<<<<<<< HEAD
    [malli.util :as mut]
    [metabase-enterprise.sandbox.schema :as sandbox.schema]
    [metabase.app-db.core :as mdb]
@@ -10,6 +11,10 @@
    [metabase.users.schema :as users.schema]
    [metabase.util.malli :as mu]
    [metabase.util.malli.schema :as ms]
+=======
+   [metabase.queries.card-schema :as card-schema]
+   [metabase.util :as u]
+>>>>>>> 9e5edb79dd7 (Rehab the `:card_schema` read-time upgrade)
    [toucan2.core :as t2]))
 
 (mu/defn sandbox
@@ -178,14 +183,14 @@
   (t2/select [:model/Field :id :name] :table_id table-id :name [:in field-names]))
 
 (mu/defn cards-by-id
-  "A map of Card ID to the query, result metadata, and schema of the Cards with `card-ids`."
+  "A map of Card ID to the query-related columns of the Cards with `card-ids`."
   [card-ids :- [:set ::lib.schema.id/card]]
-  (t2/select-pk->fn identity [:model/Card :id :dataset_query :result_metadata :card_schema] :id [:in card-ids]))
+  (u/index-by :id (card-schema/cards-by-id card-ids)))
 
 (mu/defn cards-result-metadata
-  "The `:id`, `:result_metadata`, and `:card_schema` of the Cards with `card-ids`."
+  "The query-related columns of the Cards with `card-ids`."
   [card-ids :- [:set ::lib.schema.id/card]]
-  (t2/select [:model/Card :id :result_metadata :card_schema] :id [:in card-ids]))
+  (card-schema/cards-by-id card-ids))
 
 (mu/defn card-result-metadata
   "The result metadata of the Card with `card-id`."
@@ -196,7 +201,9 @@
   "The `:id`, `:dataset_query`, `:database_id`, and `:card_schema` of the Cards Sandboxes are built on."
   []
   (t2/select :model/Card
-             {:select [:c.id :c.dataset_query :c.database_id :c.card_schema]
+             {:select [:c.id :c.dataset_query :c.database_id :c.card_schema
+                       ;; required alongside :card_schema for the Card schema upgrade
+                       :c.type :c.result_metadata :c.dimensions :c.dimension_mappings]
               :from   [[(t2/table-name :model/Card) :c]]
               :where  [:exists ^:allow-subquery {:select [[[:inline 1]]]
                                                  :from   [[(t2/table-name :model/Sandbox) :s]]
