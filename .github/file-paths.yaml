@@ -267,10 +267,17 @@ cljs:
   - ".github/workflows/cljs.yml"
   - "shadow-cljs.edn"
 
+build_scripts:
+  - ".github/actions/prepare-backend/**"
+  - ".github/file-paths.yaml"
+  - ".github/workflows/run-tests.yml"
+  - "bin/**/!(*.md)"
+  - "deps.edn"
+
 embedder_plugin:
   - ".github/actions/prepare-backend/**"
   - ".github/file-paths.yaml"
-  - ".github/workflows/build-scripts.yml"
+  - ".github/workflows/run-tests.yml"
   - "bin/build-embedder-plugin.sh"
   - "bin/build/src/build/embedder_model.clj"
   - "bin/build/src/build/plugin_uberjar.clj"
