@@ -338,8 +338,7 @@ export const fetchCardDataAction = createAsyncThunk<
     const runQuery = makePivotAwareQueryRunner(dispatch, controller.signal);
 
     if (dashboardType === "public") {
-      // Unjustified type cast. FIXME
-      result = (await fetchDataOrError(
+      result = await fetchDataOrError(
         runQuery(publicApi.endpoints.getPublicDashcardQuery, card, metadata, {
           // In public dashboards `dashboard_id` holds the public UUID string.
           uuid: dashcard.dashboard_id as string,
@@ -350,10 +349,9 @@ export const fetchCardDataAction = createAsyncThunk<
             : undefined,
           ignore_cache: ignoreCache,
         }),
-      )) as Dataset | { error: unknown };
+      );
     } else if (dashboardType === "embed") {
-      // Unjustified type cast. FIXME
-      result = (await fetchDataOrError(
+      result = await fetchDataOrError(
         runQuery(embedApi.endpoints.getEmbedDashcardQuery, card, metadata, {
           // In embedded dashboards `dashboard_id` holds the embed token string.
           token: dashcard.dashboard_id as string,
@@ -364,22 +362,20 @@ export const fetchCardDataAction = createAsyncThunk<
           ),
           ignore_cache: ignoreCache,
         }),
-      )) as Dataset | { error: unknown };
+      );
     } else if (dashboardType === "adhoc" && dashcard.card_id != null) {
-      // Unjustified type cast. FIXME
-      result = (await fetchDataOrError(
+      result = await fetchDataOrError(
         runQuery(cardApi.endpoints.getCardQuery, card, metadata, {
           cardId: dashcard.card_id,
           ignore_cache: ignoreCache,
         }),
-      )) as Dataset | { error: unknown };
+      );
     } else if (
       dashboardType === "transient" ||
       dashboardType === "inline" ||
       dashboardType === "adhoc"
     ) {
-      // Unjustified type cast. FIXME
-      result = (await fetchDataOrError(
+      result = await fetchDataOrError(
         runAdhocDatasetQuery(
           dispatch,
           card,
@@ -387,7 +383,7 @@ export const fetchCardDataAction = createAsyncThunk<
           { ...datasetQuery, ignore_cache: ignoreCache },
           controller.signal,
         ),
-      )) as Dataset | { error: unknown };
+      );
     } else {
       const dashcardBeforeEditing = getDashCardBeforeEditing(
         getState(),
@@ -406,17 +402,15 @@ export const fetchCardDataAction = createAsyncThunk<
 
       // new dashcards and new additional series cards aren't yet saved to the dashboard, so they need to be run using the card query endpoint
       if (shouldUseCardQueryEndpoint) {
-        // Unjustified type cast. FIXME
-        result = (await fetchDataOrError(
+        result = await fetchDataOrError(
           runQuery(cardApi.endpoints.getCardQuery, card, metadata, {
             cardId: card.id,
             dashboardId: dashcard.dashboard_id,
             ignore_cache: ignoreCache,
           }),
-        )) as Dataset | { error: unknown };
+        );
       } else {
-        // Unjustified type cast. FIXME
-        result = (await fetchDataOrError(
+        result = await fetchDataOrError(
           runQuery(
             dashboardApi.endpoints.getDashboardCardQuery,
             card,
@@ -431,7 +425,7 @@ export const fetchCardDataAction = createAsyncThunk<
               dashboard_load_id: dashboardLoadId,
             },
           ),
-        )) as Dataset | { error: unknown };
+        );
       }
     }
 
