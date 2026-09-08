@@ -2,9 +2,12 @@
   (:refer-clojure :exclude [ref])
   (:require
    [metabase.lib.dispatch :as lib.dispatch]
+   [metabase.lib.options :as lib.options]
+   [metabase.lib.schema.common :as lib.schema.common]
    [metabase.lib.schema.id :as lib.schema.id]
    [metabase.lib.schema.ref :as lib.schema.ref]
-   [metabase.util.malli :as mu]))
+   [metabase.util.malli :as mu]
+   [metabase.util.match :as match]))
 
 ;;; TODO (Cam 6/12/25) -- update `ref-method` to take an options map instead of needing a dynamic variable for stuff
 ;;; like this.
