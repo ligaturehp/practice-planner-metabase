@@ -163,30 +163,17 @@
    :headers {"Content-Type" "text/plain"}
    :body    "ok"})
 
-(defn- all-files-skipped?
-  "Returns true if all files were skipped (none were CSV/TSV)."
-  [{:keys [upload-result]}]
-  (let [{:keys [results skipped]} upload-result]
-    (and (seq skipped)
-         (empty? results))))
-
 (mu/defn- handle-message-file-share
-  "Process a file_share message - handles CSV uploads"
+  "Handle a Slack message with file attachments."
   [client :- slackbot.client/SlackClient
    event  :- slackbot.events/SlackMessageFileShareEvent]
-  (let [file-handling   (slackbot.uploads/handle-file-uploads client (:files event))
-        has-text?       (not (str/blank? (:text event)))
-        should-skip-ai? (and (not has-text?)
-                             (all-files-skipped? file-handling))]
-    ;; If all files were skipped (non-CSV) and there's no text, respond directly
-    ;; without calling the AI to avoid sending an empty prompt
-    (if should-skip-ai?
-      (let [skipped-files (get-in file-handling [:upload-result :skipped])]
-        (slackbot.client/post-message client
-                                      (merge (slackbot.events/event->reply-context event)
-                                             {:text (format "I can only process CSV and TSV files. The following files were skipped: %s"
-                                                            (str/join ", " skipped-files))})))
-      (slackbot.streaming/send-response client event (:system-messages file-handling)))))
+  (let [extra-history (:extra-history (slackbot.uploads/handle-file-uploads! client (:files event)))]
+    ;; When a message contains only attachments, reply directly instead of sending an empty prompt to the AI.
+    (if (str/blank? (:text event))
+      (slackbot.client/post-message client
+                                    (assoc (slackbot.events/event->reply-context event)
+                                           :text (str/join "\n\n" (map :content extra-history))))
+      (slackbot.streaming/send-response client event extra-history))))
 
 (defmethod analytics.core/known-labels :metabase-slackbot/responses-generated [_]
   [{:source "dm"      :result "success"}
