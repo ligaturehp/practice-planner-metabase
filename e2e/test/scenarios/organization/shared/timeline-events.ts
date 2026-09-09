@@ -4,7 +4,7 @@ import { SAMPLE_DATABASE } from "e2e/support/cypress_sample_database";
 const { ORDERS, ORDERS_ID } = SAMPLE_DATABASE;
 
 export function createQuestionAndDashboardWithEvents() {
-  cy.intercept("GET", "/api/timeline?include=events").as("getTimelines");
+  interceptTimelineRequests();
 
   H.createTimelineWithEvents({
     timeline: { name: "Releases" },
@@ -28,7 +28,10 @@ export function createQuestionAndDashboardWithEvents() {
           },
           enable_embedding: true,
         },
-        dashboardDetails: { enable_embedding: true },
+        dashboardDetails: {
+          name: "Dashboard with events",
+          enable_embedding: true,
+        },
       }),
     )
     .then(({ body: { dashboard_id }, questionId }) => {
@@ -37,8 +40,28 @@ export function createQuestionAndDashboardWithEvents() {
     });
 }
 
-export function expectChartWithoutEvents() {
+export function interceptTimelineRequests(requestAlias = "timelineRequests") {
+  cy.intercept(/\/api\/(?:timeline|timeline-event)(?:\/|\?|$)/).as(
+    requestAlias,
+  );
+}
+
+export function expectChartWithoutEvents({
+  requestAlias = "timelineRequests",
+  isInteractive = true,
+} = {}) {
   H.echartsContainer().findByText("Created At: Month").should("be.visible");
-  H.timelineEventChip("RC1").should("not.exist");
-  cy.get("@getTimelines.all").should("have.length", 0);
+  cy.findByTestId("timeline-event-chip").should("not.exist");
+  if (isInteractive) {
+    H.echartsContainer().trigger("mousemove", "bottom");
+  }
+  cy.findByTestId("timeline-event-popover").should("not.exist");
+  cy.findByLabelText("Timeline event card").should("not.exist");
+  cy.findByRole("button", { name: "Events", exact: true }).should("not.exist");
+  cy.findByRole("menuitem", { name: "Events", exact: true }).should(
+    "not.exist",
+  );
+  cy.findByRole("button", { name: "New event" }).should("not.exist");
+  cy.icon("calendar").should("not.exist");
+  cy.get(`@${requestAlias}.all`).should("have.length", 0);
 }
