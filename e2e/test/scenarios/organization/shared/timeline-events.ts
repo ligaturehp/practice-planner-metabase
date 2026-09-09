@@ -3,15 +3,13 @@ import { SAMPLE_DATABASE } from "e2e/support/cypress_sample_database";
 
 const { ORDERS, ORDERS_ID } = SAMPLE_DATABASE;
 
+const TIMELINE_API = /^\/api\/timeline/;
+
 export function createQuestionAndDashboardWithEvents() {
-  cy.intercept({
-    method: "GET",
-    pathname: /^\/api\/timeline(?:-event)?(?:\/.*)?$/,
-  }).as("getTimelines");
-  cy.intercept({
-    method: /POST|PUT|DELETE/,
-    pathname: /^\/api\/timeline(?:-event)?(?:\/.*)?$/,
-  }).as("mutateTimelineEvents");
+  cy.intercept({ method: "GET", pathname: TIMELINE_API }).as("getTimelines");
+  cy.intercept({ method: /POST|PUT|DELETE/, pathname: TIMELINE_API }).as(
+    "mutateTimelineEvents",
+  );
 
   H.createTimelineWithEvents({
     timeline: { name: "Releases" },
