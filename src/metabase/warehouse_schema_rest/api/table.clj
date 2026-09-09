@@ -330,6 +330,7 @@
                       :metabase/validate-defendpoint-has-response-schema]}
 (api.macros/defendpoint :get "/card__:id/query_metadata"
   "Return metadata for the 'virtual' table for a Card."
+  {:scope api-scope/data-app}
   [{:keys [id]} :- [:map
                     [:id ms/PositiveInt]]]
   (first (schema.table/batch-fetch-card-query-metadatas [id] {:include-database? true})))
