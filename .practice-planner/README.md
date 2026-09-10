@@ -26,4 +26,6 @@ Run `python3 .practice-planner/verify.py` with the same environment to check all
 
 Keep production analytics empty until the instrumented planner release is approved. Verify dashboards against synthetic data in a separate database. Account/login totals include unlinked lifecycle records; personal interaction, active-time, and editing histories cover accounts that enabled usage analytics.
 
-Raw events are retained for 90 days by the planner analytics maintenance command. Returning-user measures are limited to that retained history. Before upgrading, back up both databases, update the pinned release deliberately, and rerun bootstrap/API and browser verification.
+An analytics-retention Railway cron service uses postgres:17-alpine (pinned digest sha256:18cfe3ef5e6815560c98237d6216d1e5119702fb0f3894c8785dd58b8bbe5d73) and retention-service.json. Set PGHOST to the private analytics PostgreSQL host, PGPORT=5432, PGDATABASE=analytics, PGUSER=postgres, PGPASSWORD from that database's owner secret, and PGCONNECT_TIMEOUT=10. It removes raw events older than 90 days daily at 07:17 UTC. It has no public domain or persistent process between runs. The planner's analytics maintenance CLI performs the same operation when run manually. Returning-user measures are limited to retained history.
+
+Before upgrading, back up both databases, update the pinned release deliberately, and rerun bootstrap/API and browser verification.
