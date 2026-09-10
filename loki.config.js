@@ -18,7 +18,7 @@ module.exports = {
     "^Components/Inputs/DatePicker Dates range",
     "^Components/Inputs/Radio (Overview|Radio\\.Card)$",
     "^Components/Parameters/DatePicker",
-    "^Components/Buttons/Button Compact size, custom color",
+    "^Components/Buttons/Button (Variant|Compact|Sections)",
     "^Components/Overlays/Tooltip",
     "^Components/Documents",
     "^Components/Feedback/Alert",
