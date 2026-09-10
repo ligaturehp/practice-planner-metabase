@@ -1,9 +1,9 @@
 """Versioned questions, using only the analytics reader's reporting views."""
 
-WINDOW = "occurred_at >= now() - greatest(1, least({{days}}, 90)) * interval '1 day'"
+WINDOW = "occurred_at >= (((now() AT TIME ZONE 'UTC')::date - greatest(1, least({{days}}, 90)) + 1)::timestamp AT TIME ZONE 'UTC')"
 DAY_WINDOW = "day >= (now() AT TIME ZONE 'UTC')::date - greatest(1, least({{days}}, 90)) + 1"
 DETAIL_FILTERS = "[[AND route = {{route}}]] [[AND actor_id = {{actor}}]]"
-COVERAGE = "Personal activity covers users who enabled usage analytics. Dates use UTC; raw history is retained for 90 days."
+COVERAGE = "Personal activity covers users who enabled usage analytics. Periods include today and the preceding UTC calendar days; raw history is retained for 90 days."
 
 
 def question(name, sql, description, display="table", dimensions=None, metrics=None):

@@ -2,6 +2,7 @@
 """Integration check against a running Metabase; same environment as bootstrap."""
 
 import bootstrap as b
+from dashboards import DAY_WINDOW, WINDOW
 
 
 def verify():
@@ -27,6 +28,9 @@ def verify():
     privilege_query = "SELECT current_user, has_table_privilege(current_user,'analytics.events','SELECT'), has_table_privilege(current_user,'analytics.events','INSERT'), has_table_privilege(current_user,'analytics.raw_interactions','SELECT')"
     result = b.api("POST", "/dataset", {"database": database_id, "type": "native", "native": {"query": privilege_query}})
     assert result["data"]["rows"] == [["analytics_reader", False, False, True]], "Reader privileges are too broad"
+    boundary_query = "WITH samples AS (SELECT occurred_at, (occurred_at AT TIME ZONE 'UTC')::date AS day FROM generate_series(now()-interval '100 days',now(),interval '1 hour') AS occurred_at) SELECT count(*) FROM samples WHERE (" + WINDOW.replace("{{days}}", "7") + ") <> (" + DAY_WINDOW.replace("{{days}}", "7") + ")"
+    result = b.api("POST", "/dataset", {"database": database_id, "type": "native", "native": {"query": boundary_query}})
+    assert result["data"]["rows"] == [[0]], "Daily and event cards disagree at the UTC period boundary"
     effective = b.api("GET", "/session/properties")
     for setting in ("anon-tracking-enabled", "metaplow-tracking-enabled", "enable-public-sharing", "check-for-updates", "enable-embedding", "enable-embedding-sdk", "enable-embedding-static", "enable-embedding-interactive", "enable-embedding-simple", "ai-features-enabled?"):
         assert effective.get(setting) is False, f"Setting is not disabled: {setting}"
